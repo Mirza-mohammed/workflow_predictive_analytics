@@ -6,3 +6,4 @@ __pycache__/
 logs/*.log
 data/processed/
 data/final/
+data/raw/workflow_tasks_backup.csv
