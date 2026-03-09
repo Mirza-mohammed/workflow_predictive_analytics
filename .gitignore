@@ -6,5 +6,3 @@ __pycache__/
 logs/*.log
 data/processed/
 data/final/
-data/raw/
-data/raw/workflow_tasks.csvs
