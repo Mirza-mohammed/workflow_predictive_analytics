@@ -1,4 +1,4 @@
-model,mae,rmse,system,cv_mae_mean,cv_mae_std
-LinearRegression,102.27973457852308,189.99350401809545,baseline,,
-RandomForest,63.62121222355216,178.04141353651798,enhanced,65.2375521345446,13.558967490065523
-GradientBoosting,64.89599081999201,158.06107732791932,enhanced,65.81510262012954,14.215089825386505
+system,model,mae,rmse,cv_mae_mean,cv_mae_std,etl_runtime_seconds,notes
+baseline,LinearRegression,102.27973457852308,189.99350401809545,,,1.132993,batch ETL + simple features
+enhanced,RandomForest,63.62121222355216,178.04141353651798,65.2375521345446,13.558967490065523,1.303798,validated ETL + engineered features
+enhanced,GradientBoosting,64.89599081999201,158.06107732791932,65.81510262012954,14.215089825386505,1.303798,validated ETL + engineered features
