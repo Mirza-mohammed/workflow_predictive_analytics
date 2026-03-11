@@ -1,2 +1,2 @@
 pipeline_name,source_file,input_rows,valid_rows,invalid_rows,columns_loaded,start_time,end_time,runtime_seconds
-enhanced_etl,data/raw/workflow_tasks.csv,24918,23362,1556,45,2026-03-10 12:26:51.910660,2026-03-10 12:26:53.214458,1.303798
+enhanced_etl,data/raw/workflow_tasks.csv,24918,23362,1556,45,2026-03-11 19:22:04.513725,2026-03-11 19:22:05.739397,1.225672

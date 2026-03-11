@@ -1,0 +1,4 @@
+model_a,model_b,model_a_mean_mae,model_b_mean_mae,better_model,wilcoxon_statistic,p_value,significant_at_0_05
+DummyMedian,RandomForest,172.4744861913937,161.60658442011282,RandomForest,0.0,0.0625,False
+DummyMedian,GradientBoosting,172.4744861913937,160.91079631883704,GradientBoosting,0.0,0.0625,False
+RandomForest,GradientBoosting,161.60658442011282,160.91079631883704,GradientBoosting,5.0,0.625,False

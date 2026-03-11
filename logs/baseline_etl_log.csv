@@ -1,0 +1,2 @@
+pipeline_name,source_file,rows_loaded,columns_loaded,start_time,end_time,runtime_seconds
+baseline_etl,data/raw/workflow_tasks.csv,24918,36,2026-03-11 19:22:03.054258,2026-03-11 19:22:04.246444,1.192186
