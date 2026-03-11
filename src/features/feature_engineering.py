@@ -1,14 +1,13 @@
 import pandas as pd
 from sqlalchemy import create_engine
-from urllib.parse import quote_plus
+from src.common.config import get_db_url
 
 
 def main():
     # -----------------------------------
     # 1. Connect to MySQL
     # -----------------------------------
-    password = quote_plus("Mirza@786")
-    engine = create_engine(f"mysql+pymysql://root:{password}@localhost/workflow_db")
+    engine = create_engine(get_db_url())
 
     # -----------------------------------
     # 2. Load enhanced ETL data
@@ -29,39 +28,49 @@ def main():
     )
 
     # -----------------------------------
-    # 5. Create time-based features
+    # 5. Create safe time-based features
     # -----------------------------------
     df["opened_hour"] = df["opened_at"].dt.hour
     df["opened_dayofweek"] = df["opened_at"].dt.dayofweek
     df["is_weekend"] = df["opened_dayofweek"].isin([5, 6]).astype(int)
 
     # -----------------------------------
-    # 6. Create behavior flags
+    # 6. Create safe priority-based flag
     # -----------------------------------
-    df["reopen_flag"] = (df["reopen_count"] > 0).astype(int)
-    df["high_reassignment_flag"] = (df["reassignment_count"] > 1).astype(int)
     df["high_priority_flag"] = df["priority"].astype(str).str.lower().isin(
         ["1 - critical", "2 - high", "high", "critical"]
     ).astype(int)
 
     # -----------------------------------
-    # 7. Group average features
+    # 7. Keep only creation-time-safe fields
     # -----------------------------------
-    if "category" in df.columns:
-        category_avg = df.groupby("category")["task_duration_hours"].mean().to_dict()
-        df["category_avg_duration"] = df["category"].map(category_avg)
+    safe_feature_cols = [
+        col for col in [
+            "opened_at",
+            "priority",
+            "category",
+            "subcategory",
+            "impact",
+            "urgency",
+            "contact_type",
+            "location",
+            "opened_hour",
+            "opened_dayofweek",
+            "is_weekend",
+            "high_priority_flag"
+        ] if col in df.columns
+    ]
 
-    if "assignment_group" in df.columns:
-        group_avg = df.groupby("assignment_group")["task_duration_hours"].mean().to_dict()
-        df["assignment_group_avg_duration"] = df["assignment_group"].map(group_avg)
+    feature_df = df[safe_feature_cols + ["task_duration_hours"]].copy()
 
     # -----------------------------------
     # 8. Save engineered dataset
     # -----------------------------------
-    df.to_csv("data/processed/enhanced_feature_data.csv", index=False)
+    feature_df.to_csv("data/processed/enhanced_feature_data.csv", index=False)
 
     print("Feature engineering completed successfully.")
-    print(f"Rows saved: {len(df)}")
+    print(f"Rows saved: {len(feature_df)}")
+    print(f"Columns saved: {feature_df.columns.tolist()}")
 
 
 if __name__ == "__main__":
