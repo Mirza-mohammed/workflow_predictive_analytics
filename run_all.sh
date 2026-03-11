@@ -22,4 +22,7 @@ python src/models/train_enhanced.py
 echo "Running comparison..."
 python src/evaluation/compare_results.py
 
+echo "Running statistical testing..."
+python src/evaluation/statistical_test.py
+
 echo "Pipeline completed successfully."

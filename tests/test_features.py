@@ -8,6 +8,16 @@ def test_no_target_leaking_average_features():
     assert "assignment_group_avg_duration" not in df.columns
 
 
+def test_no_post_creation_behavior_features():
+    df = pd.read_csv("data/processed/enhanced_feature_data.csv")
+
+    assert "reopen_flag" not in df.columns
+    assert "high_reassignment_flag" not in df.columns
+    assert "reassignment_count" not in df.columns
+    assert "reopen_count" not in df.columns
+    assert "sys_mod_count" not in df.columns
+
+
 def test_safe_feature_columns_exist():
     df = pd.read_csv("data/processed/enhanced_feature_data.csv")
 
