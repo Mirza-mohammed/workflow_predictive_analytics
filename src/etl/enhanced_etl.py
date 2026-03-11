@@ -1,7 +1,7 @@
 import pandas as pd
 from sqlalchemy import create_engine
 from datetime import datetime
-from urllib.parse import quote_plus
+from src.common.config import get_db_url
 
 
 def main():
@@ -84,13 +84,17 @@ def main():
     # -----------------------------------
     # 10. Connect to MySQL
     # -----------------------------------
-    password = quote_plus("Mirza@786")
-    engine = create_engine(f"mysql+pymysql://root:{password}@localhost/workflow_db")
+    engine = create_engine(get_db_url())
 
     # -----------------------------------
     # 11. Load valid rows into MySQL
     # -----------------------------------
-    valid_df.to_sql("workflow_tasks_enhanced", con=engine, if_exists="replace", index=False)
+    valid_df.to_sql(
+        "workflow_tasks_enhanced",
+        con=engine,
+        if_exists="replace",
+        index=False
+    )
 
     # -----------------------------------
     # 12. End timer
