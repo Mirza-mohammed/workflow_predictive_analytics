@@ -1,15 +1,13 @@
 import pandas as pd
 from sqlalchemy import create_engine
-from sklearn.preprocessing import LabelEncoder, StandardScaler
-from urllib.parse import quote_plus
+from src.common.config import get_db_url
 
 
 def main():
     # -----------------------------------
-    # 1. Safe MySQL connection
+    # 1. Connect to MySQL
     # -----------------------------------
-    password = quote_plus("Mirza@786")
-    engine = create_engine(f"mysql+pymysql://root:{password}@localhost/workflow_db")
+    engine = create_engine(get_db_url())
 
     # -----------------------------------
     # 2. Read data from MySQL
@@ -41,69 +39,27 @@ def main():
     df["opened_dayofweek"] = df["opened_at"].dt.dayofweek
 
     # -----------------------------------
-    # 7. Fill missing values in categoricals
+    # 7. Keep a raw baseline-safe dataset
     # -----------------------------------
-    categorical_cols = [
-        "priority",
-        "category",
-        "assigned_to",
-        "assignment_group",
-        "incident_state"
-    ]
-
-    for col in categorical_cols:
-        if col in df.columns:
-            df[col] = df[col].fillna("unknown")
-
-    # -----------------------------------
-    # 8. Label encode categorical columns
-    # -----------------------------------
-    encoders = {}
-    for col in categorical_cols:
-        if col in df.columns:
-            le = LabelEncoder()
-            df[col] = le.fit_transform(df[col].astype(str))
-            encoders[col] = le
-
-    # -----------------------------------
-    # 9. Choose baseline features
-    # -----------------------------------
-    feature_cols = [
+    safe_feature_cols = [
         col for col in [
+            "opened_at",
             "priority",
             "category",
-            "assigned_to",
-            "assignment_group",
-            "incident_state",
+            "subcategory",
+            "impact",
+            "urgency",
+            "contact_type",
+            "location",
             "opened_hour",
-            "opened_dayofweek",
-            "reassignment_count",
-            "reopen_count",
-            "sys_mod_count"
+            "opened_dayofweek"
         ] if col in df.columns
     ]
 
-    model_df = df[feature_cols + ["task_duration_hours"]].copy()
+    model_df = df[safe_feature_cols + ["task_duration_hours"]].copy()
 
     # -----------------------------------
-    # 10. Scale numeric columns
-    # -----------------------------------
-    numeric_cols = [
-        "opened_hour",
-        "opened_dayofweek",
-        "reassignment_count",
-        "reopen_count",
-        "sys_mod_count"
-    ]
-
-    scaler = StandardScaler()
-    existing_numeric = [c for c in numeric_cols if c in model_df.columns]
-
-    if existing_numeric:
-        model_df[existing_numeric] = scaler.fit_transform(model_df[existing_numeric])
-
-    # -----------------------------------
-    # 11. Save processed baseline dataset
+    # 8. Save baseline dataset for training
     # -----------------------------------
     model_df.to_csv("data/processed/baseline_processed.csv", index=False)
 
