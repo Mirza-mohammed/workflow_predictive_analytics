@@ -1,6 +1,7 @@
 import math
 import numpy as np
 import pandas as pd
+from sklearn.base import clone
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
@@ -8,7 +9,7 @@ from sklearn.impute import SimpleImputer
 from sklearn.dummy import DummyRegressor
 from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
 from sklearn.metrics import mean_absolute_error, mean_squared_error
-from sklearn.model_selection import TimeSeriesSplit, cross_val_score
+from sklearn.model_selection import TimeSeriesSplit
 
 
 def evaluate_model(model, X_train, X_test, y_train, y_test, model_name, use_log_target=False):
@@ -18,8 +19,6 @@ def evaluate_model(model, X_train, X_test, y_train, y_test, model_name, use_log_
 
         predictions_log = model.predict(X_test)
         predictions = np.expm1(predictions_log)
-
-        # Safety: prevent tiny negative values after inverse transform
         predictions = np.maximum(predictions, 0)
     else:
         model.fit(X_train, y_train)
@@ -33,6 +32,41 @@ def evaluate_model(model, X_train, X_test, y_train, y_test, model_name, use_log_
         "mae": mae,
         "rmse": rmse
     }
+
+
+def evaluate_time_series_cv(model, X, y, model_name, use_log_target=False, n_splits=5):
+    tscv = TimeSeriesSplit(n_splits=n_splits)
+    fold_results = []
+
+    for fold_idx, (train_index, valid_index) in enumerate(tscv.split(X), start=1):
+        X_train_fold = X.iloc[train_index]
+        X_valid_fold = X.iloc[valid_index]
+
+        y_train_fold = y.iloc[train_index]
+        y_valid_fold = y.iloc[valid_index]
+
+        model_fold = clone(model)
+
+        if use_log_target:
+            y_train_fold_transformed = np.log1p(y_train_fold)
+            model_fold.fit(X_train_fold, y_train_fold_transformed)
+
+            predictions_log = model_fold.predict(X_valid_fold)
+            predictions = np.expm1(predictions_log)
+            predictions = np.maximum(predictions, 0)
+        else:
+            model_fold.fit(X_train_fold, y_train_fold)
+            predictions = model_fold.predict(X_valid_fold)
+
+        mae = mean_absolute_error(y_valid_fold, predictions)
+
+        fold_results.append({
+            "model": model_name,
+            "fold": fold_idx,
+            "mae": mae
+        })
+
+    return pd.DataFrame(fold_results)
 
 
 def main():
@@ -151,55 +185,51 @@ def main():
     # 7. Evaluate models
     # -----------------------------------
     results = []
+    all_cv_folds = []
 
-    # Use only the training portion for cross-validation
+    # CV only on training portion
     X_cv = train_df[feature_cols]
     y_cv = train_df["task_duration_hours"]
-
-    tscv = TimeSeriesSplit(n_splits=5)
 
     for model_name, model_info in models.items():
         model = model_info["pipeline"]
         use_log_target = model_info["use_log_target"]
 
+        # Final untouched test set evaluation
         result = evaluate_model(
             model, X_train, X_test, y_train, y_test, model_name, use_log_target=use_log_target
         )
 
-        if use_log_target:
-            y_cv_transformed = np.log1p(y_cv)
-            cv_scores = cross_val_score(
-                model,
-                X_cv,
-                y_cv_transformed,
-                cv=tscv,
-                scoring="neg_mean_absolute_error"
-            )
-        else:
-            cv_scores = cross_val_score(
-                model,
-                X_cv,
-                y_cv,
-                cv=tscv,
-                scoring="neg_mean_absolute_error"
-            )
+        # Manual time-series CV on original target scale
+        cv_fold_df = evaluate_time_series_cv(
+            model,
+            X_cv,
+            y_cv,
+            model_name,
+            use_log_target=use_log_target,
+            n_splits=5
+        )
 
-        result["cv_mae_mean"] = -cv_scores.mean()
-        result["cv_mae_std"] = cv_scores.std()
+        result["cv_mae_mean"] = cv_fold_df["mae"].mean()
+        result["cv_mae_std"] = cv_fold_df["mae"].std()
 
         results.append(result)
+        all_cv_folds.append(cv_fold_df)
 
     results_df = pd.DataFrame(results)
+    cv_scores_df = pd.concat(all_cv_folds, ignore_index=True)
 
     # -----------------------------------
-    # 8. Save metrics
+    # 8. Save metrics and fold scores
     # -----------------------------------
     results_df.to_csv("results/tables/enhanced_metrics.csv", index=False)
+    cv_scores_df.to_csv("results/tables/enhanced_cv_scores.csv", index=False)
 
     print("Enhanced model training completed successfully.")
     print(f"Training rows: {len(X_train)}")
     print(f"Testing rows: {len(X_test)}")
     print(results_df)
+    print("Saved fold-level CV scores to results/tables/enhanced_cv_scores.csv")
 
 
 if __name__ == "__main__":

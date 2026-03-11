@@ -1,7 +1,7 @@
 import pandas as pd
 from sqlalchemy import create_engine
 from datetime import datetime
-from urllib.parse import quote_plus
+from src.common.config import get_db_url
 
 
 def main():
@@ -39,10 +39,7 @@ def main():
     # ---------------------------
     # 5. Connect to MySQL
     # ---------------------------
-    password = quote_plus("Mirza@786")
-    engine = create_engine(
-        f"mysql+pymysql://root:{password}@localhost/workflow_db"
-    )
+    engine = create_engine(get_db_url())
 
     # ---------------------------
     # 6. Load data into MySQL
