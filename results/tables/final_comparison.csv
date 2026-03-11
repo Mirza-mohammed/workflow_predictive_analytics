@@ -1,6 +1,6 @@
 system,model,mae,rmse,cv_mae_mean,cv_mae_std,etl_runtime_seconds,mae_improvement_vs_dummy_pct,meets_success_threshold,notes
-baseline,DummyMedian,135.34208217419217,454.67778536165486,,,1.131652,,baseline_reference,naive median baseline
-baseline,LinearRegression,207.37241613563648,472.2310977270887,,,1.131652,-53.22094414709654,fail,batch ETL + safe creation-time features
-enhanced,DummyMedian,135.34208217419217,454.67778536165486,172.4744861913937,26.24095080864684,1.289209,,baseline_reference,naive median baseline
-enhanced,RandomForest,200.4314703581298,496.5536561615026,230.37570020833283,23.65906780574831,1.289209,-48.09249801563142,fail,validated ETL + engineered safe features
-enhanced,GradientBoosting,193.88509448521037,438.0402549675279,219.08369671603015,19.90639174693512,1.289209,-43.2555871540903,fail,validated ETL + engineered safe features
+baseline,DummyMedian,135.34208217419217,454.67778536165486,,,1.201189,,baseline_reference,naive median baseline
+baseline,LinearRegression,207.37241613563648,472.2310977270887,,,1.201189,-53.22094414709654,fail,batch ETL + safe creation-time features
+enhanced,DummyMedian,135.34208217419217,454.67778536165486,172.4744861913937,26.24095080864684,1.314273,,baseline_reference,naive median baseline
+enhanced,RandomForest,130.38344184183768,443.1192353737937,1.9394679030851416,0.1255026052905589,1.314273,3.6637830988682945,fail,validated ETL + engineered safe features
+enhanced,GradientBoosting,129.69637771578942,445.35977049283326,1.9452117828466815,0.1481291168200919,1.314273,4.171433132775686,fail,validated ETL + engineered safe features

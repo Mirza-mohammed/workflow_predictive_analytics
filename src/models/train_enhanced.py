@@ -1,4 +1,5 @@
 import math
+import numpy as np
 import pandas as pd
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
@@ -10,9 +11,19 @@ from sklearn.metrics import mean_absolute_error, mean_squared_error
 from sklearn.model_selection import TimeSeriesSplit, cross_val_score
 
 
-def evaluate_model(model, X_train, X_test, y_train, y_test, model_name):
-    model.fit(X_train, y_train)
-    predictions = model.predict(X_test)
+def evaluate_model(model, X_train, X_test, y_train, y_test, model_name, use_log_target=False):
+    if use_log_target:
+        y_train_transformed = np.log1p(y_train)
+        model.fit(X_train, y_train_transformed)
+
+        predictions_log = model.predict(X_test)
+        predictions = np.expm1(predictions_log)
+
+        # Safety: prevent tiny negative values after inverse transform
+        predictions = np.maximum(predictions, 0)
+    else:
+        model.fit(X_train, y_train)
+        predictions = model.predict(X_test)
 
     mae = mean_absolute_error(y_test, predictions)
     rmse = math.sqrt(mean_squared_error(y_test, predictions))
@@ -101,18 +112,39 @@ def main():
     # 6. Define models
     # -----------------------------------
     models = {
-        "DummyMedian": Pipeline(steps=[
-            ("preprocessor", preprocessor),
-            ("regressor", DummyRegressor(strategy="median"))
-        ]),
-        "RandomForest": Pipeline(steps=[
-            ("preprocessor", preprocessor),
-            ("regressor", RandomForestRegressor(random_state=42))
-        ]),
-        "GradientBoosting": Pipeline(steps=[
-            ("preprocessor", preprocessor),
-            ("regressor", GradientBoostingRegressor(random_state=42))
-        ])
+        "DummyMedian": {
+            "pipeline": Pipeline(steps=[
+                ("preprocessor", preprocessor),
+                ("regressor", DummyRegressor(strategy="median"))
+            ]),
+            "use_log_target": False
+        },
+        "RandomForest": {
+            "pipeline": Pipeline(steps=[
+                ("preprocessor", preprocessor),
+                ("regressor", RandomForestRegressor(
+                    n_estimators=200,
+                    max_depth=10,
+                    min_samples_split=5,
+                    min_samples_leaf=2,
+                    random_state=42,
+                    n_jobs=-1
+                ))
+            ]),
+            "use_log_target": True
+        },
+        "GradientBoosting": {
+            "pipeline": Pipeline(steps=[
+                ("preprocessor", preprocessor),
+                ("regressor", GradientBoostingRegressor(
+                    n_estimators=200,
+                    learning_rate=0.05,
+                    max_depth=3,
+                    random_state=42
+                ))
+            ]),
+            "use_log_target": True
+        }
     }
 
     # -----------------------------------
@@ -126,16 +158,31 @@ def main():
 
     tscv = TimeSeriesSplit(n_splits=5)
 
-    for model_name, model in models.items():
-        result = evaluate_model(model, X_train, X_test, y_train, y_test, model_name)
+    for model_name, model_info in models.items():
+        model = model_info["pipeline"]
+        use_log_target = model_info["use_log_target"]
 
-        cv_scores = cross_val_score(
-            model,
-            X_cv,
-            y_cv,
-            cv=tscv,
-            scoring="neg_mean_absolute_error"
+        result = evaluate_model(
+            model, X_train, X_test, y_train, y_test, model_name, use_log_target=use_log_target
         )
+
+        if use_log_target:
+            y_cv_transformed = np.log1p(y_cv)
+            cv_scores = cross_val_score(
+                model,
+                X_cv,
+                y_cv_transformed,
+                cv=tscv,
+                scoring="neg_mean_absolute_error"
+            )
+        else:
+            cv_scores = cross_val_score(
+                model,
+                X_cv,
+                y_cv,
+                cv=tscv,
+                scoring="neg_mean_absolute_error"
+            )
 
         result["cv_mae_mean"] = -cv_scores.mean()
         result["cv_mae_std"] = cv_scores.std()
