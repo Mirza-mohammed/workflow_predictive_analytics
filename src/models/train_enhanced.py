@@ -93,7 +93,9 @@ def main():
             "impact",
             "urgency",
             "contact_type",
-            "location"
+            "location",
+            "u_symptom",
+            "cmdb_ci"
         ] if col in df.columns
     ]
 
@@ -187,7 +189,6 @@ def main():
     results = []
     all_cv_folds = []
 
-    # CV only on training portion
     X_cv = train_df[feature_cols]
     y_cv = train_df["task_duration_hours"]
 
@@ -195,12 +196,10 @@ def main():
         model = model_info["pipeline"]
         use_log_target = model_info["use_log_target"]
 
-        # Final untouched test set evaluation
         result = evaluate_model(
             model, X_train, X_test, y_train, y_test, model_name, use_log_target=use_log_target
         )
 
-        # Manual time-series CV on original target scale
         cv_fold_df = evaluate_time_series_cv(
             model,
             X_cv,
