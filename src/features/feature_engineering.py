@@ -54,6 +54,8 @@ def main():
             "urgency",
             "contact_type",
             "location",
+            "u_symptom",
+            "cmdb_ci",
             "opened_hour",
             "opened_dayofweek",
             "is_weekend",
