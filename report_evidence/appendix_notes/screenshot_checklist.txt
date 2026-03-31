@@ -1,0 +1,37 @@
+Appendix A — Dataset and ETL
+[ ] dataset_head.png
+[ ] dataset_columns.png
+[ ] dataset_info.png
+[ ] baseline_etl_log.png
+[ ] enhanced_etl_log.png
+[ ] invalid_rows_sample.png
+[ ] mysql_workflow_table.png
+
+Appendix B — Preprocessing and features
+[ ] baseline_processed_columns.png
+[ ] enhanced_feature_columns.png
+[ ] safe_feature_list_code.png
+[ ] target_definition_code.png
+
+Appendix C — Results
+[ ] baseline_metrics_output.png
+[ ] enhanced_metrics_output.png
+[ ] final_comparison_output.png
+[ ] enhanced_cv_scores_output.png
+[ ] statistical_test_results_output.png
+[ ] enhanced_metrics_capped_99_output.png (optional)
+
+Appendix D — Testing and reproducibility
+[ ] pytest_success.png
+[ ] run_all_success.png
+[ ] tests_structure.png
+[ ] run_all_script.png
+
+Appendix E — Development history
+[ ] project_structure.png
+[ ] git_history.png
+
+Appendix F — Frontend
+[ ] frontend_input.png
+[ ] frontend_prediction.png
+[ ] frontend_terminal.png
